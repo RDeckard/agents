@@ -1,0 +1,51 @@
+<div class="w-full max-w-4xl mx-auto" data-controller="session" data-session-url-value="<%= events_session_path(@session) %>" data-session-message-url-value="<%= message_session_path(@session) %>">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold"><%= @anthropic_session.title || "Session ##{@session.id}" %></h1>
+      <p class="text-sm text-gray-500"><%= @anthropic_session.agent&.name rescue "Agent" %></p>
+    </div>
+    <div data-session-target="statusBadge" class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+      <%= @anthropic_session.status %>
+    </div>
+  </div>
+
+  <div id="events" data-session-target="events" class="space-y-3 mb-6 min-h-[200px] max-h-[60vh] overflow-y-auto bg-gray-50 rounded-lg p-4 border border-gray-200">
+    <% if @history.any? %>
+      <% @history.each do |event| %>
+        <% type = event.type.to_s %>
+        <% raw_content = (event[:content] rescue nil) %>
+        <% text = Array(raw_content).filter_map { |b| b.respond_to?(:text) ? b.text : (b[:text] || b["text"] rescue nil) }.join %>
+        <% if type == "user.message" && text.present? %>
+          <div class="rounded-lg p-3 border bg-indigo-50 text-indigo-900 border-indigo-200"><%= text %></div>
+        <% elsif type == "agent.message" && text.present? %>
+          <div data-role="assistant-message" class="prose prose-sm max-w-none bg-white rounded-lg p-4 border border-gray-200"><%= render_markdown(text) %></div>
+        <% elsif type == "agent.thinking" %>
+          <div class="rounded-lg p-3 border bg-amber-50 text-amber-800 border-amber-200 text-xs italic"><%= text.presence || "Thinking..." %></div>
+        <% elsif type == "agent.tool_use" %>
+          <div class="rounded-lg p-3 border bg-gray-100 text-gray-600 border-gray-200 text-xs font-mono">Using: <%= event[:name] || event.name %></div>
+        <% elsif type == "agent.tool_result" && text.present? %>
+          <div class="rounded-lg p-3 border bg-gray-50 text-gray-500 border-gray-100 text-xs"><%= text %></div>
+        <% end %>
+      <% end %>
+    <% else %>
+      <p class="text-gray-400 text-sm text-center py-8">Send a message to start.</p>
+    <% end %>
+  </div>
+
+  <% has_reports = @session.reports.any? %>
+  <div data-session-target="reportLink" class="<%= has_reports ? '' : 'hidden' %> mb-4">
+    <a href="<%= report_session_path(@session) %>" target="_blank"
+       class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition text-sm font-medium">
+      Open HTML Report ↗
+    </a>
+  </div>
+
+  <form data-session-target="form" data-action="submit->session#send" class="flex gap-3">
+    <input type="text" data-session-target="input" placeholder="Type your message..."
+           class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+           autofocus>
+    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium">
+      Send
+    </button>
+  </form>
+</div>

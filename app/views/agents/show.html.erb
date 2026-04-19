@@ -1,0 +1,42 @@
+<div class="w-full max-w-4xl mx-auto">
+  <%= link_to "← Back", agents_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+
+  <div class="mt-4 mb-8">
+    <h1 class="text-3xl font-bold"><%= @agent.name %></h1>
+    <p class="text-gray-500 mt-1"><%= @agent.description %></p>
+    <div class="flex gap-4 mt-3 text-sm text-gray-400">
+      <span>Model: <strong class="text-gray-600"><%= @agent.model.is_a?(String) ? @agent.model : @agent.model.id %></strong></span>
+      <span>Tools: <strong class="text-gray-600"><%= Array(@agent.tools).size %></strong></span>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-6">
+    <h2 class="text-lg font-semibold mb-4">Start a new session</h2>
+
+    <%= form_tag agent_sessions_path(@agent.id), method: :post, class: "space-y-4" do %>
+      <div>
+        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title (optional)</label>
+        <input type="text" name="title" id="title" placeholder="e.g. Research on quantum computing"
+               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+      </div>
+
+      <div>
+        <label for="environment_id" class="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+        <% if @environments.any? %>
+          <select name="environment_id" id="environment_id"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            <% @environments.each do |env| %>
+              <option value="<%= env.id %>"><%= env.name %></option>
+            <% end %>
+          </select>
+        <% else %>
+          <p class="text-sm text-red-500">No environments found. Create one first.</p>
+        <% end %>
+      </div>
+
+      <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium">
+        Start session
+      </button>
+    <% end %>
+  </div>
+</div>
