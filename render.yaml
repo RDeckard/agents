@@ -3,7 +3,7 @@ services:
     name: agents
     runtime: docker
     plan: free
-    region: oregon
+    region: frankfurt
     healthCheckPath: /up
     envVars:
       - key: RAILS_MASTER_KEY
@@ -44,4 +44,4 @@ services:
 databases:
   - name: agents-db
     plan: free
-    region: oregon
+    region: frankfurt
