@@ -50,6 +50,14 @@ module AnthropicHelpers
   def stub_anthropic_download_file(content = "<html><body>Report</body></html>")
     allow(AnthropicClient).to receive(:download_file).and_return(StringIO.new(content))
   end
+
+  def stub_anthropic_stream_events(events = [])
+    allow(AnthropicClient).to receive(:stream_events).and_return(events)
+  end
+
+  def stub_anthropic_upload_file(file = build(:anthropic_file))
+    allow(AnthropicClient).to receive(:upload_file).and_return(file)
+  end
 end
 
 RSpec.configure do |config|
