@@ -34,15 +34,17 @@ RSpec.describe "Sessions", type: :request do
       expect(response.body).not_to include("sesn_other")
     end
 
-    it "shows all sessions to admins, including unowned" do
-      create(:session, user: user, anthropic_session_id: "sesn_test789")
+    it "shows only admin's own sessions in index" do
+      create(:session, user: admin, anthropic_session_id: "sesn_admin_own")
+      create(:session, user: user, anthropic_session_id: "sesn_other")
       create(:session, user: nil, anthropic_session_id: "sesn_orphan")
 
       login_as admin
       get sessions_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("unowned")
+      expect(response.body).to include(session_path(Session.find_by(anthropic_session_id: "sesn_admin_own")))
+      expect(response.body).not_to include("unowned")
     end
 
     it "syncs bookmarks for unknown Anthropic sessions" do
@@ -123,27 +125,29 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "persists reports when loading a session" do
+    it "persists outputs when loading a session" do
       session_record = create(:session, user: user, anthropic_session_id: "sesn_test789")
       stub_anthropic_session_files([build(:anthropic_file)])
       stub_anthropic_download_file("<html><body>New Report</body></html>")
 
       login_as user
-      expect { get session_path(session_record) }.to change(Report, :count).by(1)
+      expect { get session_path(session_record) }.to change(Attachment, :count).by(1)
 
-      report = Report.last
-      expect(report.session).to eq(session_record)
-      expect(report.user).to eq(user)
-      expect(report.anthropic_file_id).to eq("file_abc")
+      attachment = Attachment.last
+      expect(attachment.session).to eq(session_record)
+      expect(attachment.user).to eq(user)
+      expect(attachment.anthropic_file_id).to eq("file_abc")
+      expect(attachment.kind).to eq("agent_output")
+      expect(attachment.file).to be_attached
     end
 
-    it "does not duplicate reports on reload" do
+    it "does not duplicate outputs on reload" do
       session_record = create(:session, user: user, anthropic_session_id: "sesn_test789")
-      create(:report, session: session_record, user: user, anthropic_file_id: "file_abc")
+      create(:attachment, session: session_record, user: user, anthropic_file_id: "file_abc")
       stub_anthropic_session_files([build(:anthropic_file, id: "file_abc")])
 
       login_as user
-      expect { get session_path(session_record) }.not_to change(Report, :count)
+      expect { get session_path(session_record) }.not_to change(Attachment, :count)
     end
   end
 
@@ -157,7 +161,7 @@ RSpec.describe "Sessions", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(AnthropicClient).to have_received(:send_message).with(
-        session_id: "sesn_test789", text: "Hello"
+        session_id: "sesn_test789", text: "Hello", file_ids: []
       )
     end
 
@@ -171,17 +175,16 @@ RSpec.describe "Sessions", type: :request do
     end
   end
 
-  describe "GET /sessions/:id/report" do
-    it "serves a persisted report" do
+  describe "GET /sessions/:id/output" do
+    it "redirects to the persisted output file" do
       session_record = create(:session, user: user, anthropic_session_id: "sesn_test789")
-      create(:report, session: session_record, user: user, content: "<html><h1>Saved</h1></html>")
+      create(:attachment, session: session_record, user: user)
       stub_anthropic_session_files
 
       login_as user
-      get report_session_path(session_record)
+      get output_session_path(session_record)
 
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Saved")
+      expect(response).to have_http_status(:redirect)
     end
 
     it "fetches and persists on first access if not in DB" do
@@ -190,18 +193,17 @@ RSpec.describe "Sessions", type: :request do
       stub_anthropic_download_file("<html><h1>Fetched</h1></html>")
 
       login_as user
-      expect { get report_session_path(session_record) }.to change(Report, :count).by(1)
+      expect { get output_session_path(session_record) }.to change(Attachment, :count).by(1)
 
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Fetched")
+      expect(response).to have_http_status(:redirect)
     end
 
-    it "returns 404 when no report exists" do
+    it "returns 404 when no output exists" do
       session_record = create(:session, user: user, anthropic_session_id: "sesn_test789")
       stub_anthropic_session_files
 
       login_as user
-      get report_session_path(session_record)
+      get output_session_path(session_record)
 
       expect(response).to have_http_status(:not_found)
     end

@@ -9,10 +9,10 @@ RSpec.describe User, type: :model do
     expect(user.sessions).to include(session)
   end
 
-  it "has many reports" do
+  it "has many attachments" do
     user = create(:user)
-    report = create(:report, user: user)
-    expect(user.reports).to include(report)
+    attachment = create(:attachment, user: user)
+    expect(user.attachments).to include(attachment)
   end
 
   it "validates email uniqueness" do

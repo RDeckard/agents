@@ -48,3 +48,5 @@ end
 gem "administrate", "~> 1.0"
 gem "redcarpet", "~> 3.6"
 gem "sorcery", "~> 0.18"
+
+gem "aws-sdk-s3", require: false

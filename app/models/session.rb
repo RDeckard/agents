@@ -2,5 +2,5 @@
 
 class Session < ApplicationRecord
   belongs_to :user, optional: true
-  has_many :reports, dependent: :nullify
+  has_many :attachments, dependent: :nullify
 end

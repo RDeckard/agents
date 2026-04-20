@@ -12,7 +12,7 @@ Rails.application.routes.draw do
   namespace :admin do
     resources :users
     resources :sessions
-    resources :reports
+    resources :attachments
 
     root to: "users#index"
   end
@@ -27,9 +27,9 @@ Rails.application.routes.draw do
     member do
       post :message
       get :events
-      get :report
+      get :output
     end
   end
 
-  resources :reports, only: %i[index show]
+  resources :attachments, only: %i[index show]
 end

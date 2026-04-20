@@ -2,14 +2,17 @@
 
 require "administrate/base_dashboard"
 
-class ReportDashboard < Administrate::BaseDashboard
+class AttachmentDashboard < Administrate::BaseDashboard
   ATTRIBUTE_TYPES = {
     id: Field::Number,
     session: Field::BelongsTo.with_options(optional: true),
     user: Field::BelongsTo.with_options(optional: true),
+    kind: Field::String,
     anthropic_file_id: Field::String,
     filename: Field::String,
-    content: Field::Text,
+    content_type: Field::String,
+    byte_size: Field::Number,
+    anthropic_created_at: Field::DateTime,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
@@ -17,6 +20,7 @@ class ReportDashboard < Administrate::BaseDashboard
   COLLECTION_ATTRIBUTES = %i[
     id
     filename
+    kind
     user
     session
     created_at
@@ -26,8 +30,12 @@ class ReportDashboard < Administrate::BaseDashboard
     id
     session
     user
+    kind
     anthropic_file_id
     filename
+    content_type
+    byte_size
+    anthropic_created_at
     created_at
     updated_at
   ].freeze
@@ -35,14 +43,15 @@ class ReportDashboard < Administrate::BaseDashboard
   FORM_ATTRIBUTES = %i[
     session
     user
+    kind
     anthropic_file_id
     filename
-    content
+    content_type
   ].freeze
 
   COLLECTION_FILTERS = {}.freeze
 
-  def display_resource(report)
-    report.filename
+  def display_resource(attachment)
+    attachment.filename
   end
 end
