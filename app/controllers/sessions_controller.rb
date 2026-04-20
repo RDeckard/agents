@@ -235,9 +235,26 @@ class SessionsController < ApplicationController # rubocop:disable Metrics/Class
   end
 
   def extract_text(event)
-    return "" unless event.respond_to?(:content)
+    raw = begin
+      event.content
+    rescue StandardError
+      event[:content]
+    end
+    return "" if raw.nil?
 
-    Array(event.content).filter_map { |block| block.text if block.respond_to?(:text) }.join
+    Array(raw).filter_map { |block| extract_block_text(block) }.join
+  end
+
+  def extract_block_text(block)
+    if block.respond_to?(:text) && block.text.present?
+      block.text
+    else
+      begin
+        block[:text] || block["text"]
+      rescue StandardError
+        nil
+      end
+    end
   end
 
   def mime_for(filename)

@@ -1,25 +1,25 @@
 <div class="w-full max-w-4xl mx-auto">
-  <h1 class="text-3xl font-bold mb-2">Sessions</h1>
-  <p class="text-gray-500 mb-8">Past and active sessions.</p>
+  <h1 class="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-100">Sessions</h1>
+  <p class="text-gray-500 dark:text-gray-400 mb-8">Past and active sessions.</p>
 
   <% if @sessions.any? %>
     <div class="space-y-2">
       <% @sessions.each do |session_record| %>
         <% anthropic = @anthropic_data[session_record.anthropic_session_id] %>
-        <%= link_to session_path(session_record), class: "block p-4 bg-white rounded-lg border border-gray-200 hover:border-indigo-400 hover:shadow-md transition" do %>
+        <%= link_to session_path(session_record), class: "block p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition" do %>
           <div class="flex items-center justify-between">
             <div>
-              <span class="font-medium text-gray-900"><%= anthropic&.title || "Session ##{session_record.id}" %></span>
-              <span class="text-sm text-gray-400 ml-3"><%= time_ago_in_words(session_record.created_at) %> ago</span>
+              <span class="font-medium text-gray-900 dark:text-gray-100"><%= anthropic&.title || "Session ##{session_record.id}" %></span>
+              <span class="text-sm text-gray-400 dark:text-gray-500 ml-3"><%= time_ago_in_words(session_record.created_at) %> ago</span>
               <% if current_user.admin? && session_record.user.nil? %>
-                <span class="text-xs text-amber-600 ml-2">(unowned)</span>
+                <span class="text-xs text-amber-600 dark:text-amber-400 ml-2">(unowned)</span>
               <% elsif current_user.admin? && session_record.user != current_user %>
-                <span class="text-xs text-gray-400 ml-2"><%= session_record.user.name || session_record.user.email %></span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 ml-2"><%= session_record.user.name || session_record.user.email %></span>
               <% end %>
             </div>
             <% status = anthropic&.status || "unknown" %>
-            <% status_colors = { "running" => "bg-blue-100 text-blue-800", "idle" => "bg-green-100 text-green-800", "terminated" => "bg-red-100 text-red-800" } %>
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium <%= status_colors[status] || 'bg-gray-100 text-gray-600' %>">
+            <% status_colors = { "running" => "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300", "idle" => "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300", "terminated" => "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300" } %>
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium <%= status_colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' %>">
               <%= status %>
             </span>
           </div>
@@ -27,7 +27,7 @@
       <% end %>
     </div>
   <% else %>
-    <div class="text-center py-16 text-gray-400">
+    <div class="text-center py-16 text-gray-400 dark:text-gray-500">
       <p class="text-lg">No sessions yet.</p>
       <p class="text-sm mt-2"><%= link_to "Start one", root_path, class: "underline" %> by choosing an agent.</p>
     </div>

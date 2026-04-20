@@ -64,7 +64,7 @@ export default class extends Controller {
         this.appendOrUpdateMessage(data.content)
         break
       case "thinking":
-        this.appendCollapsible("thinking", "Thinking...", data.content)
+        this.appendEvent("thinking", "Thinking...")
         break
       case "tool_use":
         this.appendCollapsible("tool", `Using: ${data.name}`, data.input ? JSON.stringify(data.input, null, 2) : null)
@@ -97,11 +97,11 @@ export default class extends Controller {
       const outputs = data.outputs || []
       outputs.forEach(file => {
         const el = document.createElement("div")
-        el.className = "rounded-lg p-3 border bg-emerald-50 border-emerald-200 flex items-center justify-between"
+        el.className = "rounded-lg p-3 border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 flex items-center justify-between"
         el.innerHTML = `
-          <span class="text-sm text-emerald-800">${this.escapeHtml(file.filename)}</span>
+          <span class="text-sm text-emerald-800 dark:text-emerald-300">${this.escapeHtml(file.filename)}</span>
           <a href="${file.url}" target="_blank" rel="noopener"
-             class="text-xs text-emerald-700 font-medium hover:text-emerald-900">Open ↗</a>
+             class="text-xs text-emerald-700 dark:text-emerald-400 font-medium hover:text-emerald-900 dark:hover:text-emerald-200">Open ↗</a>
         `
         this.eventsTarget.appendChild(el)
       })
@@ -116,7 +116,7 @@ export default class extends Controller {
     if (!el) {
       el = document.createElement("div")
       el.dataset.role = "assistant-message"
-      el.className = "prose prose-sm max-w-none bg-white rounded-lg p-4 border border-gray-200"
+      el.className = "prose prose-sm max-w-none bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 dark:text-gray-100"
       this.eventsTarget.appendChild(el)
     }
     this.currentMessage += content
@@ -128,12 +128,13 @@ export default class extends Controller {
     if (type === "message") this.currentMessage = ""
 
     const styles = {
-      user: "bg-indigo-50 text-indigo-900 border-indigo-200",
-      error: "bg-red-50 text-red-800 border-red-200"
+      user: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800",
+      thinking: "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-xs italic",
+      error: "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800"
     }
 
     const el = document.createElement("div")
-    el.className = `rounded-lg p-3 border ${styles[type] || "bg-white border-gray-200"}`
+    el.className = `rounded-lg p-3 border ${styles[type] || "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"}`
     el.textContent = content
     this.eventsTarget.appendChild(el)
     this.scrollToBottom()
@@ -141,11 +142,16 @@ export default class extends Controller {
 
   appendCollapsible(type, summary, details) {
     const styles = {
-      thinking: { summary: "bg-amber-50 text-amber-800 border-amber-200 text-xs italic", details: "bg-amber-25 text-amber-700" },
-      tool: { summary: "bg-gray-100 text-gray-600 border-gray-200 text-xs font-mono", details: "text-gray-500 font-mono" },
-      "tool-result": { summary: "bg-gray-50 text-gray-500 border-gray-100 text-xs", details: "text-gray-400" }
+      tool: {
+        summary: "bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 text-xs font-mono",
+        details: "text-gray-500 dark:text-gray-400 font-mono"
+      },
+      "tool-result": {
+        summary: "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700 text-xs",
+        details: "text-gray-400 dark:text-gray-500"
+      }
     }
-    const style = styles[type] || { summary: "bg-white border-gray-200", details: "" }
+    const style = styles[type] || { summary: "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700", details: "" }
 
     const el = document.createElement("details")
     el.className = `rounded-lg border ${style.summary}`
@@ -170,11 +176,11 @@ export default class extends Controller {
     const badge = this.statusBadgeTarget
     badge.textContent = status
     const colors = {
-      running: "bg-blue-100 text-blue-800",
-      idle: "bg-green-100 text-green-800",
-      terminated: "bg-red-100 text-red-800"
+      running: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+      idle: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+      terminated: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
     }
-    badge.className = `px-3 py-1 rounded-full text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-800"}`
+    badge.className = `px-3 py-1 rounded-full text-xs font-medium ${colors[status] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300"}`
   }
 
   filesChanged() {
@@ -188,7 +194,7 @@ export default class extends Controller {
     preview.classList.remove("hidden")
     Array.from(files).forEach(f => {
       const tag = document.createElement("span")
-      tag.className = "inline-flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-md px-2 py-1 text-xs text-blue-700"
+      tag.className = "inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-2 py-1 text-xs text-blue-700 dark:text-blue-300"
       tag.textContent = `📎 ${f.name}`
       preview.appendChild(tag)
     })

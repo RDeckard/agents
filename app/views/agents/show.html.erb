@@ -1,44 +1,44 @@
 <div class="w-full max-w-4xl mx-auto">
-  <%= link_to "← Back", agents_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  <%= link_to "← Back", agents_path, class: "text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" %>
 
   <div class="mt-4 mb-8">
-    <h1 class="text-3xl font-bold"><%= @agent.name %></h1>
-    <p class="text-gray-500 mt-1"><%= @agent.description %></p>
-    <div class="flex gap-4 mt-3 text-sm text-gray-400">
-      <span>Model: <strong class="text-gray-600"><%= @agent.model.is_a?(String) ? @agent.model : @agent.model.id %></strong></span>
-      <span>Tools: <strong class="text-gray-600"><%= Array(@agent.tools).size %></strong></span>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100"><%= @agent.name %></h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-1"><%= @agent.description %></p>
+    <div class="flex gap-4 mt-3 text-sm text-gray-400 dark:text-gray-500">
+      <span>Model: <strong class="text-gray-600 dark:text-gray-300"><%= @agent.model.is_a?(String) ? @agent.model : @agent.model.id %></strong></span>
+      <span>Tools: <strong class="text-gray-600 dark:text-gray-300"><%= Array(@agent.tools).size %></strong></span>
     </div>
   </div>
 
-  <div class="bg-white rounded-lg border border-gray-200 p-6">
-    <h2 class="text-lg font-semibold mb-4">Start a new session</h2>
+  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+    <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Start a new session</h2>
 
     <%= form_tag agent_sessions_path(@agent.id), method: :post, multipart: true, class: "space-y-4" do %>
       <div>
-        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title (optional)</label>
+        <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title (optional)</label>
         <input type="text" name="title" id="title" placeholder="e.g. Research on quantum computing"
-               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+               class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
       </div>
 
       <div>
-        <label for="environment_id" class="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+        <label for="environment_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Environment</label>
         <% if @environments.any? %>
           <select name="environment_id" id="environment_id"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                  class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             <% @environments.each do |env| %>
               <option value="<%= env.id %>"><%= env.name %></option>
             <% end %>
           </select>
         <% else %>
-          <p class="text-sm text-red-500">No environments found. Create one first.</p>
+          <p class="text-sm text-red-500 dark:text-red-400">No environments found. Create one first.</p>
         <% end %>
       </div>
 
       <div>
-        <label for="files" class="block text-sm font-medium text-gray-700 mb-1">Attach files (optional)</label>
+        <label for="files" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attach files (optional)</label>
         <input type="file" name="files[]" id="files" multiple
-               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
-        <p class="text-xs text-gray-400 mt-1">Files will be mounted in the agent's workspace.</p>
+               class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-300 hover:file:bg-gray-200 dark:hover:file:bg-gray-600">
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Files will be mounted in the agent's workspace.</p>
       </div>
 
       <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium">

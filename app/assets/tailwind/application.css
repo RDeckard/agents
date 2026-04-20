@@ -1,1 +1,30 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Dark mode for rendered markdown inside agent messages */
+.dark [data-role="assistant-message"] h1,
+.dark [data-role="assistant-message"] h2,
+.dark [data-role="assistant-message"] h3,
+.dark [data-role="assistant-message"] h4,
+.dark [data-role="assistant-message"] strong {
+  color: var(--color-gray-100);
+}
+
+.dark [data-role="assistant-message"] code {
+  color: var(--color-gray-200);
+  background-color: var(--color-gray-700);
+}
+
+.dark [data-role="assistant-message"] pre {
+  background-color: var(--color-gray-900);
+  color: var(--color-gray-200);
+}
+
+.dark [data-role="assistant-message"] a {
+  color: var(--color-indigo-400);
+}
+
+.dark [data-role="assistant-message"] blockquote {
+  color: var(--color-gray-400);
+  border-color: var(--color-gray-600);
+}
