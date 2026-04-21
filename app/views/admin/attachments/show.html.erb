@@ -6,7 +6,7 @@
   </h1>
 
   <div>
-    <%= link_to "View in app", report_path(page.resource), class: "button", target: "_blank", rel: "noopener" %>
+    <%= link_to "View in app", attachment_path(page.resource), class: "button", target: "_blank", rel: "noopener" %>
 
     <%= link_to(
       t("administrate.actions.edit_resource", name: page.page_title),
@@ -19,7 +19,7 @@
       [namespace, page.resource],
       class: "button button--danger",
       method: :delete,
-      data: { turbo_confirm: t("administrate.actions.confirm") }
+      data: { turbo: false, turbo_confirm: t("administrate.actions.confirm") }
     ) if accessible_action?(page.resource, :destroy) %>
   </div>
 </header>

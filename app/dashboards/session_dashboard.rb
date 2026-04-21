@@ -5,15 +5,17 @@ require "administrate/base_dashboard"
 class SessionDashboard < Administrate::BaseDashboard
   ATTRIBUTE_TYPES = {
     id: Field::Number,
+    title: Field::String,
     anthropic_session_id: Field::String,
     user: Field::BelongsTo.with_options(optional: true),
-    reports: Field::HasMany,
+    attachments: Field::HasMany,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
 
   COLLECTION_ATTRIBUTES = %i[
     id
+    title
     anthropic_session_id
     user
     created_at
@@ -21,9 +23,10 @@ class SessionDashboard < Administrate::BaseDashboard
 
   SHOW_PAGE_ATTRIBUTES = %i[
     id
+    title
     anthropic_session_id
     user
-    reports
+    attachments
     created_at
     updated_at
   ].freeze
@@ -36,6 +39,6 @@ class SessionDashboard < Administrate::BaseDashboard
   COLLECTION_FILTERS = {}.freeze
 
   def display_resource(session)
-    "Session ##{session.id}"
+    session.title.presence || "Session ##{session.id}"
   end
 end

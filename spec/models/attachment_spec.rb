@@ -14,14 +14,14 @@ RSpec.describe Attachment, type: :model do
     expect(attachment).to be_valid
   end
 
-  it "allows nil session" do
+  it "requires a session" do
     attachment = build(:attachment, session: nil)
-    expect(attachment).to be_valid
+    expect(attachment).not_to be_valid
   end
 
-  it "allows nil user" do
+  it "requires a user" do
     attachment = build(:attachment, user: nil)
-    expect(attachment).to be_valid
+    expect(attachment).not_to be_valid
   end
 
   it "validates kind inclusion" do
@@ -29,15 +29,12 @@ RSpec.describe Attachment, type: :model do
     expect(attachment).not_to be_valid
   end
 
-  it "survives session deletion" do
+  it "is destroyed when session is destroyed" do
     session_record = create(:session)
     attachment = create(:attachment, session: session_record)
 
     session_record.destroy!
-    attachment.reload
-
-    expect(attachment).to be_persisted
-    expect(attachment.session_id).to be_nil
+    expect(described_class.exists?(attachment.id)).to be false
   end
 
   describe "scopes" do
@@ -50,7 +47,7 @@ RSpec.describe Attachment, type: :model do
     end
 
     it "filters html files" do
-      html = create(:attachment, filename: "report.html")
+      html = create(:attachment, filename: "output.html")
       _csv = create(:attachment, filename: "data.csv")
 
       expect(described_class.html).to contain_exactly(html)

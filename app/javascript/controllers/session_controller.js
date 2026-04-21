@@ -64,12 +64,15 @@ export default class extends Controller {
         this.appendOrUpdateMessage(data.content)
         break
       case "thinking":
+        this.finishCurrentMessage()
         this.appendEvent("thinking", "Thinking...")
         break
       case "tool_use":
+        this.finishCurrentMessage()
         this.appendCollapsible("tool", `Using: ${data.name}`, data.input ? JSON.stringify(data.input, null, 2) : null)
         break
       case "tool_result":
+        this.finishCurrentMessage()
         if (data.content) this.appendCollapsible("tool-result", "Tool result", data.content)
         break
       case "status":
@@ -112,21 +115,24 @@ export default class extends Controller {
   }
 
   appendOrUpdateMessage(content) {
-    let el = this.eventsTarget.querySelector("[data-role='assistant-message']:last-child")
-    if (!el) {
-      el = document.createElement("div")
-      el.dataset.role = "assistant-message"
-      el.className = "prose prose-sm max-w-none bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 dark:text-gray-100"
-      this.eventsTarget.appendChild(el)
+    if (!this.currentMessageEl) {
+      this.currentMessageEl = document.createElement("div")
+      this.currentMessageEl.dataset.role = "assistant-message"
+      this.currentMessageEl.className = "prose prose-sm max-w-none bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 dark:text-gray-100"
+      this.eventsTarget.appendChild(this.currentMessageEl)
+      this.currentMessage = ""
     }
     this.currentMessage += content
-    el.innerHTML = marked.parse(this.currentMessage)
+    this.currentMessageEl.innerHTML = marked.parse(this.currentMessage)
     this.scrollToBottom()
   }
 
-  appendEvent(type, content) {
-    if (type === "message") this.currentMessage = ""
+  finishCurrentMessage() {
+    this.currentMessageEl = null
+    this.currentMessage = ""
+  }
 
+  appendEvent(type, content) {
     const styles = {
       user: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800",
       thinking: "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-xs italic",

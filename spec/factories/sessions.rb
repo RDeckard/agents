@@ -3,6 +3,7 @@
 FactoryBot.define do
   factory :session do
     sequence(:anthropic_session_id) { |n| "sesn_test#{n}" }
+    sequence(:title) { |n| "Test Session #{n}" }
     user
   end
 end

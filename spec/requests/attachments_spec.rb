@@ -16,29 +16,27 @@ RSpec.describe "Attachments", type: :request do
 
   describe "GET /attachments" do
     it "shows only the current user's attachments" do
-      create(:attachment, user: user, filename: "my_report.html")
-      create(:attachment, user: other_user, filename: "other_report.html")
+      create(:attachment, user: user, filename: "my_output.html")
+      create(:attachment, user: other_user, filename: "other_output.html")
 
       login_as user
       get attachments_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("my_report.html")
-      expect(response.body).not_to include("other_report.html")
+      expect(response.body).to include("my_output.html")
+      expect(response.body).not_to include("other_output.html")
     end
 
     it "shows only admin's own attachments in index" do
-      create(:attachment, user: admin, filename: "admin_report.html")
-      create(:attachment, user: other_user, filename: "other_report.html")
-      create(:attachment, user: nil, filename: "orphan_report.html")
+      create(:attachment, user: admin, filename: "admin_output.html")
+      create(:attachment, user: other_user, filename: "other_output.html")
 
       login_as admin
       get attachments_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("admin_report.html")
-      expect(response.body).not_to include("other_report.html")
-      expect(response.body).not_to include("orphan_report.html")
+      expect(response.body).to include("admin_output.html")
+      expect(response.body).not_to include("other_output.html")
     end
 
     it "filters by kind" do
@@ -83,23 +81,13 @@ RSpec.describe "Attachments", type: :request do
   end
 
   describe "persistence" do
-    it "attachments survive session deletion" do
+    it "attachments are destroyed with their session" do
       session_record = create(:session, user: user)
-      attachment = create(:attachment, session: session_record, user: user, filename: "surviving.html")
+      attachment = create(:attachment, session: session_record, user: user, filename: "gone.html")
 
       session_record.destroy!
 
-      expect(Attachment.find(attachment.id)).to be_present
-      expect(Attachment.find(attachment.id).session_id).to be_nil
-    end
-
-    it "attachments without sessions are still listed" do
-      create(:attachment, session: nil, user: user, filename: "orphan.html")
-
-      login_as user
-      get attachments_path
-
-      expect(response.body).to include("orphan.html")
+      expect(Attachment.exists?(attachment.id)).to be false
     end
   end
 end

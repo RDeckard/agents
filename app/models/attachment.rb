@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class Attachment < ApplicationRecord
-  has_one_attached :file
+  has_one_attached :file, dependent: :purge_later
 
-  belongs_to :session, optional: true
-  belongs_to :user, optional: true
+  belongs_to :session
+  belongs_to :user
 
   validates :anthropic_file_id, uniqueness: true, allow_nil: true
   validates :filename, presence: true

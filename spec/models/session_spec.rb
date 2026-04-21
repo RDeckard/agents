@@ -3,9 +3,9 @@
 require "rails_helper"
 
 RSpec.describe Session, type: :model do
-  it "allows nil user" do
-    session = described_class.create!(anthropic_session_id: "sesn_orphan", user: nil)
-    expect(session).to be_persisted
+  it "requires a user" do
+    session = described_class.new(anthropic_session_id: "sesn_orphan", user: nil)
+    expect(session).not_to be_valid
   end
 
   it "allows nil anthropic_session_id" do
@@ -16,7 +16,7 @@ RSpec.describe Session, type: :model do
   it "allows duplicate anthropic_session_ids" do
     user = create(:user)
     described_class.create!(anthropic_session_id: "sesn_dup", user: user)
-    dup = described_class.create!(anthropic_session_id: "sesn_dup", user: nil)
+    dup = described_class.create!(anthropic_session_id: "sesn_dup", user: user)
     expect(dup).to be_persisted
   end
 
@@ -37,11 +37,11 @@ RSpec.describe Session, type: :model do
     expect(session.attachments.count).to eq(2)
   end
 
-  it "nullifies attachments on destroy" do
+  it "destroys attachments on destroy" do
     session = create(:session)
     attachment = create(:attachment, session: session, user: session.user)
 
     session.destroy!
-    expect(attachment.reload.session_id).to be_nil
+    expect(Attachment.exists?(attachment.id)).to be false
   end
 end

@@ -23,26 +23,27 @@ Browser ←── EventSource (SSE) ──→ Rails ←── SSE ──→ Anth
         ──→ POST (message/files) ──→    ──→ POST
 ```
 
-- **Sessions** are lightweight bookmarks: only the `anthropic_session_id` and `user_id` are stored locally. Title, status, and agent info come from the Anthropic API at request time.
-- **File uploads**: users attach files when creating a session or during chat. Files are uploaded to the Anthropic Files API (mounted in the agent's container at `/workspace/<filename>`) and persisted locally via ActiveStorage.
+- **Sessions** are lightweight bookmarks: `anthropic_session_id`, `user_id`, `title`, and `agent_name` are stored locally. Live status and full event history come from the Anthropic API.
+- **File uploads**: users attach files when creating a session or during chat. Files are uploaded to the Anthropic Files API and mounted in the agent's container (`/workspace/<filename>` at creation, `/mnt/session/uploads/<filename>` during chat). Persisted locally via ActiveStorage.
 - **Agent outputs**: files the agent writes to `/mnt/session/outputs/` are downloaded and persisted as Attachments when the SSE stream goes idle and when a session page is loaded. They appear inline in the chat.
+- **Session deletion**: deletes the session and all its files on Anthropic's side, then destroys local records and purges R2 blobs.
 
 ## Data model
 
 ```
 User
-├── has_many :sessions      (nullified on user delete)
-└── has_many :attachments   (nullified on user delete)
+├── has_many :sessions      (destroyed on user delete → cascades)
+└── has_many :attachments   (destroyed on user delete)
 
 Session (bookmark)
-├── belongs_to :user        (optional — nil for unowned/synced sessions)
-├── has_many :attachments   (nullified on session delete)
+├── belongs_to :user        (required)
+├── has_many :attachments   (destroyed on session delete → purges R2 blobs)
 └── anthropic_session_id    (the real session lives on Anthropic's side)
 
 Attachment
-├── belongs_to :session     (optional — survives session deletion)
-├── belongs_to :user        (optional)
-├── has_one_attached :file  (ActiveStorage)
+├── belongs_to :session     (required)
+├── belongs_to :user        (required)
+├── has_one_attached :file  (ActiveStorage → Cloudflare R2 in prod)
 ├── anthropic_file_id       (unique, nullable for pending uploads)
 ├── filename, content_type, byte_size
 ├── kind                    ("agent_output" or "uploaded_input")
@@ -56,7 +57,7 @@ app/
 ├── services/anthropic_client.rb       # All Anthropic API calls (SDK wrapper)
 ├── controllers/
 │   ├── agents_controller.rb           # Agent listing + session creation form
-│   ├── sessions_controller.rb         # CRUD, SSE streaming, file persistence
+│   ├── sessions_controller.rb         # CRUD, SSE streaming, file persistence, deletion
 │   ├── attachments_controller.rb      # File listing + download
 │   ├── user_sessions_controller.rb    # Login/logout
 │   └── admin/                         # Administrate controllers
@@ -66,7 +67,7 @@ app/
 │   └── attachment.rb                  # Unified file model (outputs + uploads)
 ├── views/
 │   ├── agents/                        # Agent grid, session creation with file upload
-│   ├── sessions/                      # Chat UI with inline files
+│   ├── sessions/                      # Chat UI with inline files + delete button
 │   ├── attachments/                   # File list with kind filter
 │   └── user_sessions/                 # Login form
 ├── javascript/controllers/
@@ -84,7 +85,7 @@ app/
 | CSS | Tailwind via `tailwindcss-rails` | No Node build step |
 | Assets | Propshaft + importmap | No bundler, JS via ESM |
 | Auth | Sorcery | Email/password, no public signup |
-| Admin | Administrate | Dashboard at `/admin` |
+| Admin | Administrate | Dashboard at `/admin` (read + delete, no create for sessions/attachments) |
 | Anthropic SDK | `anthropic` gem | Managed Agents beta (`managed-agents-2026-04-01`) |
 | Markdown | Redcarpet (server) + marked.js (client) | |
 | Deploy | Render (web service + PostgreSQL) | Persistent process, no SSE timeout |
@@ -105,6 +106,7 @@ These are non-obvious and will bite you:
 - `files.list(scope_id:)` needs both beta headers combined: `"anthropic-beta" => "managed-agents-2026-04-01,files-api-2025-04-14"`. Passing `betas:` as a parameter doesn't merge correctly.
 - `files.download` returns a `StringIO`, not a string. Call `.read` on it.
 - Method names differ from REST docs: `stream_events` (not `stream`), `send_` (not `send`), `retrieve` takes a positional arg (not keyword).
+- `document` content blocks in user messages only support PDF and plaintext — not HTML or other formats. Files of other types should be mounted as session resources instead.
 
 ## Development guidelines
 
@@ -114,7 +116,7 @@ These are non-obvious and will bite you:
 bundle exec rspec
 ```
 
-46 specs covering auth, user scoping, session bookmarking, file persistence/deduplication, admin access, agent listing, message sending, and file upload/retrieval. All Anthropic API calls are stubbed via helpers in `spec/support/anthropic_helpers.rb`.
+55 specs covering auth, user scoping, session lifecycle (create/view/delete), file persistence/deduplication, cascade deletion, admin access, agent listing, message sending, and file upload/retrieval. All Anthropic API calls are stubbed via helpers in `spec/support/anthropic_helpers.rb`.
 
 **Write specs first.** Factories live in `spec/factories/`. Stub Anthropic calls using the helpers — no API key needed to run the suite.
 

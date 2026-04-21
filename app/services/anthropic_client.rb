@@ -38,12 +38,16 @@ class AnthropicClient
     instance.beta.sessions.create(**params)
   end
 
-  def self.send_message(session_id:, text:, file_ids: [])
-    content = file_ids.map { |fid| { type: "file", file_id: fid } }
-    content << { type: "text", text: text }
+  def self.add_session_resource(session_id:, file_id:, mount_path: nil)
+    params = { file_id: file_id, type: "file" }
+    params[:mount_path] = mount_path if mount_path
+    instance.beta.sessions.resources.add(session_id, **params)
+  end
+
+  def self.send_message(session_id:, text:)
     instance.beta.sessions.events.send_(
       session_id,
-      events: [{ type: "user.message", content: content }]
+      events: [{ type: "user.message", content: [{ type: "text", text: text }] }]
     )
   end
 
@@ -68,6 +72,14 @@ class AnthropicClient
 
   def self.download_file(file_id:)
     instance.beta.files.download(file_id)
+  end
+
+  def self.delete_session(session_id:)
+    instance.beta.sessions.delete(session_id)
+  end
+
+  def self.delete_file(file_id:)
+    instance.beta.files.delete(file_id)
   end
 
   def self.upload_file(io:, filename:, content_type: "application/octet-stream")

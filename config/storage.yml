@@ -8,11 +8,13 @@ local:
 
 cloudflare:
   service: S3
-  endpoint: <%= ENV.fetch("R2_ENDPOINT") %>
+  endpoint: <%= ENV.fetch("R2_ENDPOINT", "https://placeholder.r2.cloudflarestorage.com") %>
   access_key_id: <%= ENV["R2_ACCESS_KEY_ID"] %>
   secret_access_key: <%= ENV["R2_SECRET_ACCESS_KEY"] %>
   region: auto
-  bucket: <%= ENV.fetch("R2_BUCKET") %>
+  bucket: <%= ENV.fetch("R2_BUCKET", "agents") %>
+  request_checksum_calculation: when_required
+  response_checksum_validation: when_required
 
 # Remember not to checkin your GCS keyfile to a repository
 # google:

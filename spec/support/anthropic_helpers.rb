@@ -47,7 +47,7 @@ module AnthropicHelpers
     allow(AnthropicClient).to receive(:session_files).and_return(response)
   end
 
-  def stub_anthropic_download_file(content = "<html><body>Report</body></html>")
+  def stub_anthropic_download_file(content = "<html><body>Output</body></html>")
     allow(AnthropicClient).to receive(:download_file).and_return(StringIO.new(content))
   end
 
@@ -57,6 +57,18 @@ module AnthropicHelpers
 
   def stub_anthropic_upload_file(file = build(:anthropic_file))
     allow(AnthropicClient).to receive(:upload_file).and_return(file)
+  end
+
+  def stub_anthropic_delete_session
+    allow(AnthropicClient).to receive(:delete_session)
+  end
+
+  def stub_anthropic_delete_file
+    allow(AnthropicClient).to receive(:delete_file)
+  end
+
+  def stub_anthropic_add_session_resource
+    allow(AnthropicClient).to receive(:add_session_resource)
   end
 end
 

@@ -10,7 +10,7 @@ module Admin
     def require_admin
       return if current_user&.admin?
 
-      redirect_to root_path, alert: "Not authorized" # rubocop:disable Rails/I18nLocaleTexts
+      redirect_to root_path, alert: "Not authorized"
     end
 
     def not_authenticated

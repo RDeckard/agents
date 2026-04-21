@@ -4,12 +4,7 @@ class SessionsController < ApplicationController # rubocop:disable Metrics/Class
   include ActionController::Live
 
   def index
-    anthropic_sessions = AnthropicClient.list_sessions.data
-    sync_bookmarks(anthropic_sessions)
-
     @sessions = current_user.sessions.order(created_at: :desc)
-
-    @anthropic_data = anthropic_sessions.index_by(&:id)
   end
 
   DISPLAYABLE_EVENTS = %w[user.message agent.message agent.thinking agent.tool_use agent.tool_result].to_set.freeze
@@ -48,6 +43,8 @@ class SessionsController < ApplicationController # rubocop:disable Metrics/Class
 
     session_record = Session.create!(
       anthropic_session_id: anthropic_session.id,
+      title: anthropic_session.title,
+      agent_name: agent.name,
       user: current_user
     )
 
@@ -59,12 +56,16 @@ class SessionsController < ApplicationController # rubocop:disable Metrics/Class
   def message
     @session = find_session(params[:id])
 
-    file_ids = upload_and_persist_chat_files(@session, params[:files])
+    filenames = upload_and_persist_chat_files(@session, params[:files])
+
+    text = params[:text].to_s
+    if filenames.any?
+      text = "#{text}\n\n[Attached files mounted at /mnt/session/uploads/: #{filenames.join(', ')}]".strip
+    end
 
     AnthropicClient.send_message(
       session_id: @session.anthropic_session_id,
-      text: params[:text],
-      file_ids: file_ids
+      text: text
     )
     head :ok
   end
@@ -98,6 +99,25 @@ class SessionsController < ApplicationController # rubocop:disable Metrics/Class
     response.stream.close
   end
 
+  def destroy
+    @session = find_session(params[:id])
+
+    begin
+      AnthropicClient.delete_session(session_id: @session.anthropic_session_id)
+    rescue StandardError => e
+      Rails.logger.warn("Failed to delete Anthropic session: #{e.message}")
+    end
+
+    @session.attachments.where.not(anthropic_file_id: nil).find_each do |att|
+      AnthropicClient.delete_file(file_id: att.anthropic_file_id)
+    rescue StandardError => e
+      Rails.logger.warn("Failed to delete Anthropic file #{att.anthropic_file_id}: #{e.message}")
+    end
+
+    @session.destroy!
+    redirect_to sessions_path, notice: "Session deleted."
+  end
+
   def output
     @session = find_session(params[:id])
     persist_outputs(@session)
@@ -120,22 +140,15 @@ class SessionsController < ApplicationController # rubocop:disable Metrics/Class
     end
   end
 
-  def sync_bookmarks(anthropic_sessions)
-    known_ids = Session.where(anthropic_session_id: anthropic_sessions.map(&:id))
-                       .pluck(:anthropic_session_id)
-                       .to_set
-
-    anthropic_sessions.each do |as|
-      next if known_ids.include?(as.id)
-
-      Session.create!(anthropic_session_id: as.id, user: nil)
-    end
-  end
-
   def persist_outputs(session_record)
     files = AnthropicClient.session_files(session_id: session_record.anthropic_session_id)
     files.data.each do |file|
-      next if Attachment.exists?(anthropic_file_id: file.id)
+      existing = Attachment.find_by(anthropic_file_id: file.id)
+      if existing
+        next if existing.file.attached?
+
+        existing.destroy!
+      end
 
       content = AnthropicClient.download_file(file_id: file.id).read
       ct = mime_for(file.filename)
@@ -185,6 +198,11 @@ class SessionsController < ApplicationController # rubocop:disable Metrics/Class
         filename: uploaded_file.original_filename,
         content_type: uploaded_file.content_type
       )
+      AnthropicClient.add_session_resource(
+        session_id: session_record.anthropic_session_id,
+        file_id: anthropic_file.id,
+        mount_path: "/mnt/session/uploads/#{uploaded_file.original_filename}"
+      )
       attachment = session_record.attachments.create!(
         anthropic_file_id: anthropic_file.id,
         filename: uploaded_file.original_filename,
@@ -194,7 +212,7 @@ class SessionsController < ApplicationController # rubocop:disable Metrics/Class
         user: session_record.user
       )
       attachment.file.attach(uploaded_file)
-      anthropic_file.id
+      uploaded_file.original_filename
     end
   end
 

@@ -5,12 +5,12 @@ FactoryBot.define do
     session
     user { session&.user }
     sequence(:anthropic_file_id) { |n| "file_#{n}" }
-    filename { "report.html" }
+    filename { "output.html" }
     kind { "agent_output" }
 
     after(:build) do |attachment|
       attachment.file.attach(
-        io: StringIO.new("<html><body><h1>Report</h1></body></html>"),
+        io: StringIO.new("<html><body><h1>Output</h1></body></html>"),
         filename: attachment.filename,
         content_type: "text/html"
       )
@@ -18,7 +18,7 @@ FactoryBot.define do
 
     trait :output do
       kind { "agent_output" }
-      filename { "report.html" }
+      filename { "output.html" }
     end
 
     trait :input do
