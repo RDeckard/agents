@@ -82,7 +82,7 @@ GEM
       actionview (>= 6.0, < 9.0)
       activerecord (>= 6.0, < 9.0)
       kaminari (~> 1.2.2)
-    anthropic (1.35.0)
+    anthropic (1.36.0)
       cgi
       connection_pool
     ast (2.4.3)
@@ -546,7 +546,7 @@ CHECKSUMS
   activesupport (8.1.3) sha256=21a5e0dfbd4c3ddd9e1317ec6a4d782fa226e7867dc70b0743acda81a1dca20e
   addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
   administrate (1.0.0) sha256=65b0008214d352cab51e8230086ddcd3af11ac5ee91233db89dbea24bd432471
-  anthropic (1.35.0) sha256=a99ff2cfc3109e17c747d6b8ce810754b9af797a07d6ecd4d21c6321798b7abf
+  anthropic (1.36.0) sha256=f6dcbe2fbb4a1d61cac15a3e46c635c70fb8b5b21e0e4f0bcede212c722f9b41
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
   aws-eventstream (1.4.0) sha256=116bf85c436200d1060811e6f5d2d40c88f65448f2125bc77ffce5121e6e183b
   aws-partitions (1.1240.0) sha256=b885b21712fdad699c56a28434756ed27f1389b07231320796dda9e7551de4a7
