@@ -2,13 +2,21 @@ services:
   - type: web
     name: agents
     runtime: docker
-    plan: starter
-    region: oregon
+    plan: free
+    region: frankfurt
     healthCheckPath: /up
     envVars:
       - key: RAILS_MASTER_KEY
         sync: false
       - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
         sync: false
       - key: DATABASE_URL
         fromDatabase:
@@ -35,5 +43,5 @@ services:
 
 databases:
   - name: agents-db
-    plan: starter
-    region: oregon
+    plan: free
+    region: frankfurt

@@ -1,23 +1,23 @@
 <div class="w-full max-w-4xl mx-auto">
-  <h1 class="text-3xl font-bold mb-2">Agents</h1>
-  <p class="text-gray-500 mb-8">Choose an agent to start a session.</p>
+  <h1 class="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-100">Agents</h1>
+  <p class="text-gray-500 dark:text-gray-400 mb-8">Choose an agent to start a session.</p>
 
   <% if @agents.any? %>
     <div class="grid gap-4">
       <% @agents.each do |agent| %>
-        <%= link_to agent_path(agent.id), class: "block p-6 bg-white rounded-lg border border-gray-200 hover:border-indigo-400 hover:shadow-md transition" do %>
+        <%= link_to agent_path(agent.id), class: "block p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition" do %>
           <div class="flex items-start justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-gray-900"><%= agent.name %></h2>
-              <p class="text-sm text-gray-500 mt-1"><%= agent.description.presence || "No description" %></p>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100"><%= agent.name %></h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1"><%= agent.description.presence || "No description" %></p>
             </div>
-            <span class="text-xs font-mono text-gray-400 shrink-0 ml-4"><%= agent.model.is_a?(String) ? agent.model : agent.model.id %></span>
+            <span class="text-xs font-mono text-gray-400 dark:text-gray-500 shrink-0 ml-4"><%= agent.model.is_a?(String) ? agent.model : agent.model.id %></span>
           </div>
         <% end %>
       <% end %>
     </div>
   <% else %>
-    <div class="text-center py-16 text-gray-400">
+    <div class="text-center py-16 text-gray-400 dark:text-gray-500">
       <p class="text-lg">No agents found.</p>
       <p class="text-sm mt-2">Create one at <a href="https://platform.claude.com" class="underline">platform.claude.com</a></p>
     </div>

@@ -9,10 +9,10 @@ RSpec.describe User, type: :model do
     expect(user.sessions).to include(session)
   end
 
-  it "has many reports" do
+  it "has many attachments" do
     user = create(:user)
-    report = create(:report, user: user)
-    expect(user.reports).to include(report)
+    attachment = create(:attachment, user: user)
+    expect(user.attachments).to include(attachment)
   end
 
   it "validates email uniqueness" do
@@ -30,10 +30,10 @@ RSpec.describe User, type: :model do
     expect(create(:user)).not_to be_admin
   end
 
-  it "nullifies sessions on destroy" do
+  it "destroys sessions on destroy" do
     user = create(:user)
     session = create(:session, user: user)
     user.destroy!
-    expect(session.reload.user_id).to be_nil
+    expect(Session.exists?(session.id)).to be false
   end
 end

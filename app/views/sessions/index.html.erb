@@ -1,33 +1,35 @@
 <div class="w-full max-w-4xl mx-auto">
-  <h1 class="text-3xl font-bold mb-2">Sessions</h1>
-  <p class="text-gray-500 mb-8">Past and active sessions.</p>
+  <h1 class="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-100">Sessions</h1>
+  <p class="text-gray-500 dark:text-gray-400 mb-8">Past and active sessions.</p>
 
   <% if @sessions.any? %>
     <div class="space-y-2">
       <% @sessions.each do |session_record| %>
-        <% anthropic = @anthropic_data[session_record.anthropic_session_id] %>
-        <%= link_to session_path(session_record), class: "block p-4 bg-white rounded-lg border border-gray-200 hover:border-indigo-400 hover:shadow-md transition" do %>
-          <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition">
+          <%= link_to session_path(session_record), class: "flex-1 min-w-0" do %>
             <div>
-              <span class="font-medium text-gray-900"><%= anthropic&.title || "Session ##{session_record.id}" %></span>
-              <span class="text-sm text-gray-400 ml-3"><%= time_ago_in_words(session_record.created_at) %> ago</span>
-              <% if current_user.admin? && session_record.user.nil? %>
-                <span class="text-xs text-amber-600 ml-2">(unowned)</span>
-              <% elsif current_user.admin? && session_record.user != current_user %>
-                <span class="text-xs text-gray-400 ml-2"><%= session_record.user.name || session_record.user.email %></span>
+              <span class="font-medium text-gray-900 dark:text-gray-100"><%= session_record.title || "Session ##{session_record.id}" %></span>
+              <% if session_record.agent_name.present? %>
+                <span class="text-sm text-gray-400 dark:text-gray-500 ml-2"><%= session_record.agent_name %></span>
+              <% end %>
+              <span class="text-sm text-gray-400 dark:text-gray-500 ml-3"><%= time_ago_in_words(session_record.created_at) %> ago</span>
+              <% if current_user.admin? && session_record.user != current_user %>
+                <span class="text-xs text-gray-400 dark:text-gray-500 ml-2"><%= session_record.user.name || session_record.user.email %></span>
               <% end %>
             </div>
-            <% status = anthropic&.status || "unknown" %>
-            <% status_colors = { "running" => "bg-blue-100 text-blue-800", "idle" => "bg-green-100 text-green-800", "terminated" => "bg-red-100 text-red-800" } %>
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium <%= status_colors[status] || 'bg-gray-100 text-gray-600' %>">
-              <%= status %>
-            </span>
-          </div>
-        <% end %>
+          <% end %>
+          <%= button_to session_path(session_record), method: :delete,
+              data: { turbo_confirm: "Delete this session? This also deletes it on Anthropic." },
+              class: "ml-3 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          <% end %>
+        </div>
       <% end %>
     </div>
   <% else %>
-    <div class="text-center py-16 text-gray-400">
+    <div class="text-center py-16 text-gray-400 dark:text-gray-500">
       <p class="text-lg">No sessions yet.</p>
       <p class="text-sm mt-2"><%= link_to "Start one", root_path, class: "underline" %> by choosing an agent.</p>
     </div>

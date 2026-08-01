@@ -29,12 +29,17 @@ Style/Documentation:
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
+Rails/I18nLocaleTexts:
+  Enabled: false
+
 RSpec/ExampleLength:
   Enabled: false
 
 RSpec/MultipleExpectations:
   Enabled: false
 
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
 RSpec/NestedGroups:
   Max: 4
-

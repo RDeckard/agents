@@ -46,7 +46,7 @@ FactoryBot.define do
 
   factory :anthropic_file, class: "AnthropicFile" do
     id { "file_abc" }
-    filename { "report.html" }
+    filename { "output.html" }
 
     initialize_with { AnthropicFile.new(**attributes) }
   end

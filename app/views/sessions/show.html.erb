@@ -1,51 +1,106 @@
-<div class="w-full max-w-4xl mx-auto" data-controller="session" data-session-url-value="<%= events_session_path(@session) %>" data-session-message-url-value="<%= message_session_path(@session) %>">
+<div class="w-full max-w-4xl mx-auto" data-controller="session"
+     data-session-url-value="<%= events_session_path(@session) %>"
+     data-session-message-url-value="<%= message_session_path(@session) %>"
+     data-session-attachments-url-value="<%= session_path(@session, format: :json) %>">
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold"><%= @anthropic_session.title || "Session ##{@session.id}" %></h1>
-      <p class="text-sm text-gray-500"><%= @anthropic_session.agent&.name rescue "Agent" %></p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100"><%= @anthropic_session.title || "Session ##{@session.id}" %></h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400"><%= @anthropic_session.agent&.name rescue "Agent" %></p>
     </div>
-    <div data-session-target="statusBadge" class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-      <%= @anthropic_session.status %>
+    <div class="flex items-center gap-3">
+      <div data-session-target="statusBadge" class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+        <%= @anthropic_session.status %>
+      </div>
+      <%= button_to session_path(@session), method: :delete,
+          data: { turbo_confirm: "Delete this session?" },
+          class: "text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+      <% end %>
     </div>
   </div>
 
-  <div id="events" data-session-target="events" class="space-y-3 mb-6 min-h-[200px] max-h-[60vh] overflow-y-auto bg-gray-50 rounded-lg p-4 border border-gray-200">
+  <% inputs = @session.attachments.inputs %>
+  <% if inputs.any? %>
+    <div class="mb-4 space-y-2">
+      <p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">Uploaded files</p>
+      <% inputs.each do |att| %>
+        <div class="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-1.5 text-sm">
+          <%= link_to att.filename, attachment_path(att), target: "_blank", rel: "noopener",
+              class: "text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 underline" %>
+          <% if att.byte_size %>
+            <span class="text-blue-400 dark:text-blue-500 text-xs"><%= number_to_human_size(att.byte_size) %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div id="events" data-session-target="events" class="space-y-3 mb-6 min-h-[200px] max-h-[60vh] overflow-y-auto bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
     <% if @history.any? %>
       <% @history.each do |event| %>
         <% type = event.type.to_s %>
         <% raw_content = (event[:content] rescue nil) %>
-        <% text = Array(raw_content).filter_map { |b| b.respond_to?(:text) ? b.text : (b[:text] || b["text"] rescue nil) }.join %>
+        <% text = Array(raw_content).filter_map { |b|
+          b.respond_to?(:text) && b.text.present? ? b.text : (b[:text] || b["text"] rescue nil)
+        }.join %>
         <% if type == "user.message" && text.present? %>
-          <div class="rounded-lg p-3 border bg-indigo-50 text-indigo-900 border-indigo-200"><%= text %></div>
+          <div class="rounded-lg p-3 border bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800"><%= text %></div>
         <% elsif type == "agent.message" && text.present? %>
-          <div data-role="assistant-message" class="prose prose-sm max-w-none bg-white rounded-lg p-4 border border-gray-200"><%= render_markdown(text) %></div>
+          <div data-role="assistant-message" class="prose prose-sm max-w-none bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 dark:text-gray-100"><%= render_markdown(text) %></div>
         <% elsif type == "agent.thinking" %>
-          <div class="rounded-lg p-3 border bg-amber-50 text-amber-800 border-amber-200 text-xs italic"><%= text.presence || "Thinking..." %></div>
+          <div class="rounded-lg p-3 border bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-xs italic">Thinking...</div>
         <% elsif type == "agent.tool_use" %>
-          <div class="rounded-lg p-3 border bg-gray-100 text-gray-600 border-gray-200 text-xs font-mono">Using: <%= event[:name] || event.name %></div>
+          <% tool_input = (event[:input] || event.input rescue nil) %>
+          <details class="rounded-lg border bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 text-xs font-mono">
+            <summary class="p-3 cursor-pointer select-none list-none flex items-center gap-2">
+              <svg class="w-3 h-3 transition-transform details-arrow shrink-0" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Using: <%= event[:name] || event.name %>
+            </summary>
+            <% if tool_input.present? %>
+              <div class="px-3 pb-3 pt-0 text-xs whitespace-pre-wrap break-all text-gray-500 dark:text-gray-400"><%= tool_input.is_a?(String) ? tool_input : tool_input.to_json %></div>
+            <% end %>
+          </details>
         <% elsif type == "agent.tool_result" && text.present? %>
-          <div class="rounded-lg p-3 border bg-gray-50 text-gray-500 border-gray-100 text-xs"><%= text %></div>
+          <details class="rounded-lg border bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700 text-xs">
+            <summary class="p-3 cursor-pointer select-none list-none flex items-center gap-2">
+              <svg class="w-3 h-3 transition-transform details-arrow shrink-0" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Tool result
+            </summary>
+            <div class="px-3 pb-3 pt-0 text-xs whitespace-pre-wrap break-all text-gray-400 dark:text-gray-500"><%= text %></div>
+          </details>
         <% end %>
       <% end %>
     <% else %>
-      <p class="text-gray-400 text-sm text-center py-8">Send a message to start.</p>
+      <p class="text-gray-400 dark:text-gray-500 text-sm text-center py-8">Send a message to start.</p>
+    <% end %>
+
+    <% outputs = @session.attachments.outputs %>
+    <% if outputs.any? %>
+      <% outputs.order(created_at: :asc).each do |att| %>
+        <div class="rounded-lg p-3 border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+          <span class="text-sm text-emerald-800 dark:text-emerald-300"><%= att.filename %></span>
+          <%= link_to "Open ↗", attachment_path(att), target: "_blank", rel: "noopener",
+              class: "text-xs text-emerald-700 dark:text-emerald-400 font-medium hover:text-emerald-900 dark:hover:text-emerald-200" %>
+        </div>
+      <% end %>
     <% end %>
   </div>
 
-  <% has_reports = @session.reports.any? %>
-  <div data-session-target="reportLink" class="<%= has_reports ? '' : 'hidden' %> mb-4">
-    <a href="<%= report_session_path(@session) %>" target="_blank"
-       class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition text-sm font-medium">
-      Open HTML Report ↗
-    </a>
-  </div>
-
-  <form data-session-target="form" data-action="submit->session#send" class="flex gap-3">
-    <input type="text" data-session-target="input" placeholder="Type your message..."
-           class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-           autofocus>
-    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium">
-      Send
-    </button>
+  <form data-session-target="form" data-action="submit->session#send" class="space-y-2">
+    <div data-session-target="filePreview" class="hidden flex flex-wrap gap-2"></div>
+    <div class="flex gap-3">
+      <label class="flex items-center justify-center w-10 h-10 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer transition" title="Attach files">
+        <input type="file" data-session-target="fileInput" data-action="change->session#filesChanged" multiple class="hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+        </svg>
+      </label>
+      <input type="text" data-session-target="input" placeholder="Type your message..."
+             class="flex-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+             autofocus>
+      <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium">
+        Send
+      </button>
+    </div>
   </form>
 </div>

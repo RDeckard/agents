@@ -19,7 +19,7 @@
       [namespace, page.resource],
       class: "button button--danger",
       method: :delete,
-      data: { turbo_confirm: t("administrate.actions.confirm") }
+      data: { turbo: false, turbo_confirm: t("administrate.actions.confirm") }
     ) if accessible_action?(page.resource, :destroy) %>
   </div>
 </header>

@@ -28,12 +28,20 @@ class AnthropicClient
     instance.beta.sessions.retrieve(session_id)
   end
 
-  def self.create_session(agent_id:, environment_id:, title: nil)
-    instance.beta.sessions.create(
+  def self.create_session(agent_id:, environment_id:, title: nil, resources: nil)
+    params = {
       agent: agent_id,
       environment_id: environment_id,
       title: title
-    )
+    }
+    params[:resources] = resources.map { |r| r.slice(:type, :file_id, :mount_path) } if resources
+    instance.beta.sessions.create(**params)
+  end
+
+  def self.add_session_resource(session_id:, file_id:, mount_path: nil)
+    params = { file_id: file_id, type: "file" }
+    params[:mount_path] = mount_path if mount_path
+    instance.beta.sessions.resources.add(session_id, **params)
   end
 
   def self.send_message(session_id:, text:)
@@ -64,5 +72,18 @@ class AnthropicClient
 
   def self.download_file(file_id:)
     instance.beta.files.download(file_id)
+  end
+
+  def self.delete_session(session_id:)
+    instance.beta.sessions.delete(session_id)
+  end
+
+  def self.delete_file(file_id:)
+    instance.beta.files.delete(file_id)
+  end
+
+  def self.upload_file(io:, filename:, content_type: "application/octet-stream")
+    file = Anthropic::FilePart.new(io.read, filename: filename, content_type: content_type)
+    instance.beta.files.upload(file: file)
   end
 end

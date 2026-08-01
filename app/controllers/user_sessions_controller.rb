@@ -11,7 +11,7 @@ class UserSessionsController < ApplicationController
     if (@user = login(params[:email], params[:password]))
       redirect_to_before_login_path(root_path)
     else
-      flash.now[:alert] = "Invalid email or password" # rubocop:disable Rails/I18nLocaleTexts
+      flash.now[:alert] = "Invalid email or password"
       render :new, status: :unprocessable_content
     end
   end

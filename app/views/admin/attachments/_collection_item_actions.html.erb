@@ -1,5 +1,5 @@
 <td class="cell-label--action-button">
-  <%= link_to "View in app", report_path(resource), class: "action-show", target: "_blank", rel: "noopener" %>
+  <%= link_to "View in app", attachment_path(resource), class: "action-show", target: "_blank", rel: "noopener" %>
 </td>
 
 <% if existing_action?(collection_presenter.resource_name, :edit) %>
@@ -16,6 +16,6 @@
     [namespace, resource],
     class: "link link--danger",
     method: :delete,
-    data: { turbo_confirm: t("administrate.actions.confirm") }
+    data: { turbo: false, turbo_confirm: t("administrate.actions.confirm") }
   ) if accessible_action?(resource, :destroy) %></td>
 <% end %>

@@ -11,8 +11,8 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resources :users
-    resources :sessions
-    resources :reports
+    resources :sessions, except: %i[new create]
+    resources :attachments, except: %i[new create]
 
     root to: "users#index"
   end
@@ -23,13 +23,13 @@ Rails.application.routes.draw do
     resources :sessions, only: [:create]
   end
 
-  resources :sessions, only: %i[index show] do
+  resources :sessions, only: %i[index show destroy] do
     member do
       post :message
       get :events
-      get :report
+      get :output
     end
   end
 
-  resources :reports, only: %i[index show]
+  resources :attachments, only: %i[index show]
 end
